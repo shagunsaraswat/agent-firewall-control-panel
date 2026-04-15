@@ -20,7 +20,8 @@
 <p align="center">
   Agent FirewallKit is an open-source control plane that helps you run AI agents with clear boundaries.<br />
   It tracks whether work is progressing, re-checks approvals against live state,<br />
-  and turns observed behavior into enforceable policy.
+  and turns observed behavior into enforceable policy.<br />
+  Built for policy-first AI operations.
 </p>
 
 <p align="center"><img src="docs/assets/hero-banner.png" alt="Agent FirewallKit — Runtime safety for autonomous agents" width="100%" /></p>
