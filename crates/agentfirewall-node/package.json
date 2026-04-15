@@ -1,0 +1,16 @@
+{
+  "name": "@agentfirewall/sdk",
+  "version": "0.1.0",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "napi": {
+    "name": "agentfirewall",
+    "triples": {
+      "defaults": true
+    }
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@napi-rs/cli": "^3.0.0"
+  }
+}

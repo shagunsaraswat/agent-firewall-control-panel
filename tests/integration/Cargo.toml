@@ -1,0 +1,26 @@
+[package]
+name = "agentfirewall-integration-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Integration tests for Agent FirewallKit Control Plane"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+agentfirewall-core = { workspace = true }
+agentfirewall-server = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+tokio = { workspace = true, features = ["test-util", "macros", "rt-multi-thread", "process"] }
+tonic = { workspace = true }
+prost = { workspace = true }
+prost-types = { workspace = true }
+reqwest = { version = "0.12", features = ["json"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

@@ -1,0 +1,173 @@
+syntax = "proto3";
+
+package agentfirewall.run.v1;
+
+import "agentfirewall/common/v1/common.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_package = "com.agentfirewall.run.v1";
+option go_package = "github.com/shagunsaraswat/agent-firewall-control-panel/gen/go/run/v1;runv1";
+
+enum RunStatus {
+  RUN_STATUS_UNSPECIFIED = 0;
+  RUN_STATUS_PENDING = 1;
+  RUN_STATUS_RUNNING = 2;
+  RUN_STATUS_COMPLETED = 3;
+  RUN_STATUS_FAILED = 4;
+  RUN_STATUS_CANCELLED = 5;
+  RUN_STATUS_BLOCKED = 6;
+}
+
+enum BudgetUnit {
+  BUDGET_UNIT_UNSPECIFIED = 0;
+  BUDGET_UNIT_USD = 1;
+  BUDGET_UNIT_TOKENS = 2;
+  BUDGET_UNIT_REQUESTS = 3;
+}
+
+message BudgetComponent {
+  BudgetUnit unit = 1;
+  double reserved = 2;
+  double consumed = 3;
+  double limit = 4;
+}
+
+message BudgetState {
+  repeated BudgetComponent components = 1;
+  google.protobuf.Timestamp updated_at = 2;
+}
+
+message CostAttribution {
+  string model = 1;
+  string tool = 2;
+  double estimated_usd = 3;
+  double actual_usd = 4;
+  int64 prompt_tokens = 5;
+  int64 completion_tokens = 6;
+}
+
+message Run {
+  string run_id = 1;
+  agentfirewall.common.v1.ResourceScope scope = 2;
+  string agent_id = 3; // UUID string (RFC 4122 canonical text form)
+  RunStatus status = 4;
+  int32 step_index = 5;
+  google.protobuf.Timestamp started_at = 6;
+  google.protobuf.Timestamp ended_at = 7;
+  BudgetState budget = 8;
+  CostAttribution last_attribution = 9;
+  agentfirewall.common.v1.Labels labels = 10;
+  google.protobuf.Struct metadata = 11;
+  // Persisted run mode (monitor, enforce, standalone); learner mode is managed via LearnerService.SetMode.
+  string mode = 12;
+  // Optional explicit goal text; may be duplicated in metadata for compatibility.
+  string goal = 13;
+}
+
+message CreateRunRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  agentfirewall.common.v1.ResourceScope scope = 2;
+  string agent_id = 3; // UUID string
+  BudgetState initial_budget = 4;
+  agentfirewall.common.v1.Labels labels = 5;
+  google.protobuf.Struct metadata = 6;
+  string mode = 7;
+  string goal = 8;
+}
+
+message CreateRunResponse {
+  Run run = 1;
+}
+
+message GetRunRequest {
+  string run_id = 1;
+}
+
+message GetRunResponse {
+  Run run = 1;
+}
+
+message ListRunsRequest {
+  agentfirewall.common.v1.PageRequest page = 1;
+  agentfirewall.common.v1.ResourceScope scope = 2;
+  RunStatus status_filter = 3;
+  string agent_id = 4; // UUID string filter
+}
+
+message ListRunsResponse {
+  repeated Run runs = 1;
+  agentfirewall.common.v1.PageResponse page = 2;
+}
+
+message CompleteRunRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  string run_id = 2;
+  RunStatus terminal_status = 3; // COMPLETED or FAILED when applicable
+  google.protobuf.Struct outcome = 4;
+  CostAttribution final_attribution = 5;
+}
+
+message CompleteRunResponse {
+  Run run = 1;
+}
+
+message CancelRunRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  string run_id = 2;
+  string reason_code = 3;
+  string comment = 4;
+}
+
+message CancelRunResponse {
+  Run run = 1;
+}
+
+message EvaluateStepRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  string run_id = 2;
+  int32 step_index = 3;
+  // Serialized step descriptor: tool name, args hash, model id, etc.
+  google.protobuf.Struct step_context = 4;
+  // Optional projected costs before execution.
+  CostAttribution projected_cost = 5;
+}
+
+message EvaluateStepResponse {
+  string decision = 1; // allow | deny | require_approval | downgrade | pause
+  string reason_code = 2;
+  google.protobuf.Struct decision_context = 3;
+}
+
+message CompleteStepRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  string run_id = 2;
+  int32 step_index = 3;
+  bool success = 4;
+  CostAttribution actual_cost = 5;
+  google.protobuf.Struct outcome = 6;
+}
+
+message CompleteStepResponse {
+  Run run = 1;
+}
+
+message GetBudgetStateRequest {
+  string run_id = 1;
+}
+
+message GetBudgetStateResponse {
+  BudgetState budget = 1;
+}
+
+service RunService {
+  rpc CreateRun(CreateRunRequest) returns (CreateRunResponse);
+  rpc GetRun(GetRunRequest) returns (GetRunResponse);
+  rpc ListRuns(ListRunsRequest) returns (ListRunsResponse);
+  rpc CompleteRun(CompleteRunRequest) returns (CompleteRunResponse);
+  rpc CancelRun(CancelRunRequest) returns (CancelRunResponse);
+  rpc EvaluateStep(EvaluateStepRequest) returns (EvaluateStepResponse);
+  rpc CompleteStep(CompleteStepRequest) returns (CompleteStepResponse);
+  rpc GetBudgetState(GetBudgetStateRequest) returns (GetBudgetStateResponse);
+}

@@ -1,0 +1,214 @@
+syntax = "proto3";
+
+package agentfirewall.policy.v1;
+
+import "agentfirewall/common/v1/common.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_package = "com.agentfirewall.policy.v1";
+option go_package = "github.com/shagunsaraswat/agent-firewall-control-panel/gen/go/policy/v1;policyv1";
+
+// Lifecycle status for a policy document.
+enum PolicyStatus {
+  POLICY_STATUS_UNSPECIFIED = 0;
+  POLICY_STATUS_DRAFT = 1;
+  POLICY_STATUS_ACTIVE = 2;
+  POLICY_STATUS_ARCHIVED = 3;
+}
+
+// Default enforcement disposition when no rule matches.
+enum DefaultPolicyAction {
+  DEFAULT_POLICY_ACTION_UNSPECIFIED = 0;
+  DEFAULT_POLICY_ACTION_ALLOW = 1;
+  DEFAULT_POLICY_ACTION_DENY = 2;
+  DEFAULT_POLICY_ACTION_REQUIRE_APPROVAL = 3;
+  DEFAULT_POLICY_ACTION_DOWNGRADE = 4;
+  DEFAULT_POLICY_ACTION_PAUSE = 5;
+}
+
+// What the rule targets (tooling, model, writes, etc.).
+enum RuleTargetType {
+  RULE_TARGET_TYPE_UNSPECIFIED = 0;
+  RULE_TARGET_TYPE_MODEL = 1;
+  RULE_TARGET_TYPE_TOOL = 2;
+  RULE_TARGET_TYPE_WRITE_ACTION = 3;
+  RULE_TARGET_TYPE_DELEGATION = 4;
+  RULE_TARGET_TYPE_BUDGET = 5;
+}
+
+// Action when the rule matches.
+enum RuleAction {
+  RULE_ACTION_UNSPECIFIED = 0;
+  RULE_ACTION_ALLOW = 1;
+  RULE_ACTION_DENY = 2;
+  RULE_ACTION_REQUIRE_APPROVAL = 3;
+  RULE_ACTION_DOWNGRADE = 4;
+  RULE_ACTION_PAUSE = 5;
+}
+
+// One rule within a policy.
+message PolicyRule {
+  string rule_id = 1; // UUID
+  int32 priority = 2; // lower runs first
+  RuleTargetType target_type = 3;
+  // Selector expression (CEL, JSONPath, or internal DSL — serialized as string).
+  string target_selector = 4;
+  // Structured conditions; schema aligns with policy-schema contract.
+  google.protobuf.Struct conditions = 5;
+  RuleAction action = 6;
+  google.protobuf.Struct action_config = 7;
+  string reason_code = 8;
+  bool enabled = 9;
+}
+
+// Full policy aggregate returned by APIs.
+message Policy {
+  string policy_id = 1;
+  int64 version = 2; // monotonic per policy_id
+  agentfirewall.common.v1.ScopeType scope_type = 3;
+  string scope_id = 4;
+  PolicyStatus status = 5;
+  DefaultPolicyAction default_action = 6;
+  string name = 7;
+  string description = 8;
+  repeated PolicyRule rules = 9;
+  agentfirewall.common.v1.Labels labels = 10;
+  string created_by = 11;
+  google.protobuf.Timestamp created_at = 12;
+  google.protobuf.Timestamp updated_at = 13;
+  string etag = 14; // optimistic concurrency token
+}
+
+// Point-in-time snapshot for auditing.
+message PolicyVersion {
+  string policy_id = 1;
+  int64 version = 2;
+  Policy document = 3;
+  google.protobuf.Timestamp published_at = 4;
+  string published_by = 5;
+  string change_summary = 6;
+}
+
+message CreatePolicyRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  agentfirewall.common.v1.ResourceScope scope = 2;
+  string name = 3;
+  string description = 4;
+  DefaultPolicyAction default_action = 5;
+  repeated PolicyRule rules = 6;
+  agentfirewall.common.v1.Labels labels = 7;
+  // If true, create as DRAFT; otherwise server may reject without explicit status.
+  bool create_as_draft = 8;
+}
+
+message CreatePolicyResponse {
+  Policy policy = 1;
+}
+
+message GetPolicyRequest {
+  string policy_id = 1;
+  // If zero, return latest version.
+  int64 version = 2;
+}
+
+message GetPolicyResponse {
+  Policy policy = 1;
+}
+
+message ListPoliciesRequest {
+  agentfirewall.common.v1.PageRequest page = 1;
+  agentfirewall.common.v1.ResourceScope scope = 2;
+  PolicyStatus status_filter = 3;
+  string name_prefix = 4;
+}
+
+message ListPoliciesResponse {
+  repeated Policy policies = 1;
+  agentfirewall.common.v1.PageResponse page = 2;
+}
+
+message UpdatePolicyRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  string policy_id = 2;
+  string etag = 3; // required for optimistic concurrency
+  // Field mask paths (protobuf JSON names), e.g. "name", "rules", "defaultAction".
+  repeated string update_mask = 4;
+  string name = 5;
+  string description = 6;
+  DefaultPolicyAction default_action = 7;
+  repeated PolicyRule rules = 8;
+  agentfirewall.common.v1.Labels labels = 9;
+}
+
+message UpdatePolicyResponse {
+  Policy policy = 1;
+}
+
+message ActivatePolicyRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  string policy_id = 2;
+  string etag = 3;
+  string activation_comment = 4;
+}
+
+message ActivatePolicyResponse {
+  Policy policy = 1;
+}
+
+message DeactivatePolicyRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  string policy_id = 2;
+  string etag = 3;
+  string deactivation_comment = 4;
+}
+
+message DeactivatePolicyResponse {
+  Policy policy = 1;
+}
+
+message CreatePolicyVersionRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  string policy_id = 2;
+  string etag = 3;
+  DefaultPolicyAction default_action = 4;
+  repeated PolicyRule rules = 5;
+  agentfirewall.common.v1.Labels labels = 6;
+  string change_summary = 7;
+}
+
+message CreatePolicyVersionResponse {
+  PolicyVersion version = 1;
+}
+
+message GetPolicyVersionRequest {
+  string policy_id = 1;
+  int64 version = 2;
+}
+
+message GetPolicyVersionResponse {
+  PolicyVersion version = 1;
+}
+
+message ListPolicyVersionsRequest {
+  agentfirewall.common.v1.PageRequest page = 1;
+  string policy_id = 2;
+}
+
+message ListPolicyVersionsResponse {
+  repeated PolicyVersion versions = 1;
+  agentfirewall.common.v1.PageResponse page = 2;
+}
+
+service PolicyService {
+  rpc CreatePolicy(CreatePolicyRequest) returns (CreatePolicyResponse);
+  rpc GetPolicy(GetPolicyRequest) returns (GetPolicyResponse);
+  rpc ListPolicies(ListPoliciesRequest) returns (ListPoliciesResponse);
+  rpc UpdatePolicy(UpdatePolicyRequest) returns (UpdatePolicyResponse);
+  rpc ActivatePolicy(ActivatePolicyRequest) returns (ActivatePolicyResponse);
+  rpc DeactivatePolicy(DeactivatePolicyRequest) returns (DeactivatePolicyResponse);
+  rpc CreatePolicyVersion(CreatePolicyVersionRequest) returns (CreatePolicyVersionResponse);
+  rpc GetPolicyVersion(GetPolicyVersionRequest) returns (GetPolicyVersionResponse);
+  rpc ListPolicyVersions(ListPolicyVersionsRequest) returns (ListPolicyVersionsResponse);
+}

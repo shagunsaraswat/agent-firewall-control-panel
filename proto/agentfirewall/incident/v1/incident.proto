@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package agentfirewall.incident.v1;
+
+import "agentfirewall/common/v1/common.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_package = "com.agentfirewall.incident.v1";
+option go_package = "github.com/shagunsaraswat/agent-firewall-control-panel/gen/go/incident/v1;incidentv1";
+
+enum IncidentSeverity {
+  INCIDENT_SEVERITY_UNSPECIFIED = 0;
+  INCIDENT_SEVERITY_INFO = 1;
+  INCIDENT_SEVERITY_LOW = 2;
+  INCIDENT_SEVERITY_MEDIUM = 3;
+  INCIDENT_SEVERITY_HIGH = 4;
+  INCIDENT_SEVERITY_CRITICAL = 5;
+}
+
+enum IncidentStatus {
+  INCIDENT_STATUS_UNSPECIFIED = 0;
+  INCIDENT_STATUS_OPEN = 1;
+  INCIDENT_STATUS_ACKNOWLEDGED = 2;
+  INCIDENT_STATUS_RESOLVED = 3;
+  INCIDENT_STATUS_DISMISSED = 4;
+}
+
+message RemediationStep {
+  string step_id = 1;
+  string title = 2;
+  string description = 3;
+  bool completed = 4;
+  google.protobuf.Timestamp completed_at = 5;
+  string completed_by = 6;
+}
+
+message Incident {
+  string incident_id = 1;
+  IncidentSeverity severity = 2;
+  IncidentStatus status = 3;
+  string title = 4;
+  string summary = 5;
+  string reason_code = 6;
+  string run_id = 7;
+  string policy_id = 8;
+  string approval_id = 9;
+  agentfirewall.common.v1.ResourceScope scope = 10;
+  google.protobuf.Struct context = 11;
+  repeated RemediationStep remediation = 12;
+  string created_by = 13;
+  google.protobuf.Timestamp created_at = 14;
+  google.protobuf.Timestamp updated_at = 15;
+  string owner = 16;
+}
+
+message CreateIncidentRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  IncidentSeverity severity = 2;
+  string title = 3;
+  string summary = 4;
+  string reason_code = 5;
+  string run_id = 6;
+  string policy_id = 7;
+  string approval_id = 8;
+  agentfirewall.common.v1.ResourceScope scope = 9;
+  google.protobuf.Struct context = 10;
+  repeated RemediationStep remediation = 11;
+  string created_by = 12;
+}
+
+message CreateIncidentResponse {
+  Incident incident = 1;
+}
+
+message GetIncidentRequest {
+  string incident_id = 1;
+}
+
+message GetIncidentResponse {
+  Incident incident = 1;
+}
+
+message ListIncidentsRequest {
+  agentfirewall.common.v1.PageRequest page = 1;
+  agentfirewall.common.v1.ResourceScope scope = 2;
+  IncidentStatus status_filter = 3;
+  IncidentSeverity severity_at_least = 4;
+  string reason_code_prefix = 5;
+}
+
+message ListIncidentsResponse {
+  repeated Incident incidents = 1;
+  agentfirewall.common.v1.PageResponse page = 2;
+}
+
+message AcknowledgeIncidentRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  string incident_id = 2;
+  string acknowledged_by = 3;
+  string comment = 4;
+}
+
+message AcknowledgeIncidentResponse {
+  Incident incident = 1;
+}
+
+message ResolveIncidentRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  string incident_id = 2;
+  string resolved_by = 3;
+  string resolution_summary = 4;
+  google.protobuf.Struct resolution_metadata = 5;
+}
+
+message ResolveIncidentResponse {
+  Incident incident = 1;
+}
+
+service IncidentService {
+  rpc CreateIncident(CreateIncidentRequest) returns (CreateIncidentResponse);
+  rpc GetIncident(GetIncidentRequest) returns (GetIncidentResponse);
+  rpc ListIncidents(ListIncidentsRequest) returns (ListIncidentsResponse);
+  rpc AcknowledgeIncident(AcknowledgeIncidentRequest) returns (AcknowledgeIncidentResponse);
+  rpc ResolveIncident(ResolveIncidentRequest) returns (ResolveIncidentResponse);
+}

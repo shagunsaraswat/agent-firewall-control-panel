@@ -1,0 +1,39 @@
+[package]
+name = "agentfirewall-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Agent FirewallKit CLI for policy management and operator workflows"
+
+[[bin]]
+name = "agentfirewall"
+path = "src/main.rs"
+
+[dependencies]
+agentfirewall-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+clap = { workspace = true, features = ["env"] }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+tokio = { workspace = true }
+tonic = { workspace = true }
+prost = { workspace = true }
+prost-types = { workspace = true }
+reqwest = { version = "0.12", features = ["json"] }
+rust_decimal = { workspace = true }
+comfy-table = "7"
+colored = "2"
+
+[build-dependencies]
+tonic-build = { workspace = true }
+protobuf-src = "2.1"
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"

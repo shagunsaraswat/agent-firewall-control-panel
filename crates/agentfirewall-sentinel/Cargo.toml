@@ -1,0 +1,22 @@
+[package]
+name = "agentfirewall-sentinel"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Goal-aware progress tracking and intervention for Agent FirewallKit"
+
+[dependencies]
+agentfirewall-core = { workspace = true }
+agentfirewall-embed = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+proptest = { workspace = true }

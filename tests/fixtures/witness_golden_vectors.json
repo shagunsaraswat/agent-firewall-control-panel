@@ -1,0 +1,25 @@
+{
+  "description": "Shared golden vectors for cross-language witness hash parity testing",
+  "vectors": [
+    {
+      "name": "empty_object",
+      "input": {},
+      "expected_hash": "placeholder_hash_to_be_generated_by_rust"
+    },
+    {
+      "name": "simple_key_value",
+      "input": {"key": "value"},
+      "expected_hash": "placeholder_hash_to_be_generated_by_rust"
+    },
+    {
+      "name": "nested_object",
+      "input": {"a": {"b": "c", "d": 1}},
+      "expected_hash": "placeholder_hash_to_be_generated_by_rust"
+    },
+    {
+      "name": "array_values",
+      "input": {"items": [1, 2, 3]},
+      "expected_hash": "placeholder_hash_to_be_generated_by_rust"
+    }
+  ]
+}

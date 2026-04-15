@@ -1,0 +1,200 @@
+syntax = "proto3";
+
+package agentfirewall.learner.v1;
+
+import "agentfirewall/common/v1/common.proto";
+import "agentfirewall/policy/v1/policy.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_package = "com.agentfirewall.learner.v1";
+option go_package = "github.com/shagunsaraswat/agent-firewall-control-panel/gen/go/learner/v1;learnerv1";
+
+enum LearnerMode {
+  LEARNER_MODE_UNSPECIFIED = 0;
+  LEARNER_MODE_OBSERVE_ONLY = 1;
+  LEARNER_MODE_RECOMMEND = 2;
+  LEARNER_MODE_AUTO_PROMOTE_SAFE = 3;
+}
+
+enum CandidateStatus {
+  CANDIDATE_STATUS_UNSPECIFIED = 0;
+  CANDIDATE_STATUS_PROPOSED = 1;
+  CANDIDATE_STATUS_APPROVED = 2;
+  CANDIDATE_STATUS_REJECTED = 3;
+  CANDIDATE_STATUS_SUPERSEDED = 4;
+}
+
+// Wire span ingest event; fields align with SDK `SpanEvent` / design.md.
+message SpanIngestEvent {
+  string event_id = 1;
+  string trace_id = 2;
+  string span_id = 3;
+  string parent_span_id = 4;
+  google.protobuf.Timestamp ts = 5;
+  string tenant_id = 6;
+  string workspace_id = 7;
+  string project_id = 8;
+  string agent_type = 9;
+  string agent_id = 10; // UUID string when available
+  string task_category = 11;
+  string run_id = 12;
+  SpanKind kind = 13;
+  string tool_name = 14;
+  string tool_args_fingerprint = 15;
+  string model_id = 16;
+  double cost_usd = 17;
+  uint64 input_tokens = 18;
+  uint64 output_tokens = 19;
+  uint32 step_index = 20;
+  float progress_score = 21;
+  float progress_delta = 22;
+  string write_target_uri = 23;
+  string write_operation = 24;
+  string net_host = 25;
+  string net_method = 26;
+  map<string, string> attributes = 27;
+  string sdk_version = 28;
+
+  enum SpanKind {
+    SPAN_KIND_UNSPECIFIED = 0;
+    SPAN_KIND_RUN_START = 1;
+    SPAN_KIND_RUN_END = 2;
+    SPAN_KIND_TOOL_CALL = 3;
+    SPAN_KIND_MODEL_CALL = 4;
+    SPAN_KIND_WRITE = 5;
+    SPAN_KIND_DELEGATION = 6;
+    SPAN_KIND_SENTINEL_SAMPLE = 7;
+    SPAN_KIND_POLICY_DECISION = 8;
+    SPAN_KIND_CUSTOM = 9;
+  }
+}
+
+message BaselineSignal {
+  string name = 1;
+  double score = 2;
+  google.protobuf.Struct dimensions = 3;
+}
+
+message Baseline {
+  agentfirewall.common.v1.ResourceScope scope = 1;
+  repeated BaselineSignal signals = 2;
+  google.protobuf.Timestamp computed_at = 3;
+  string model_revision = 4;
+}
+
+message PolicyCandidate {
+  string candidate_id = 1;
+  agentfirewall.common.v1.ResourceScope scope = 2;
+  CandidateStatus status = 3;
+  agentfirewall.policy.v1.Policy proposed_policy = 4;
+  google.protobuf.Struct diff_summary = 5;
+  double confidence = 6;
+  google.protobuf.Timestamp generated_at = 7;
+  string generated_by_job_id = 8;
+}
+
+message PolicyCandidateProposed {
+  string event_id = 1;
+  string tenant_id = 2;
+  string candidate_id = 3;
+  PolicyCandidate candidate = 4;
+  google.protobuf.Timestamp emitted_at = 5;
+}
+
+message GetBaselineRequest {
+  agentfirewall.common.v1.ResourceScope scope = 1;
+}
+
+message GetBaselineResponse {
+  Baseline baseline = 1;
+}
+
+message ListCandidatesRequest {
+  agentfirewall.common.v1.PageRequest page = 1;
+  agentfirewall.common.v1.ResourceScope scope = 2;
+  CandidateStatus status_filter = 3;
+}
+
+message ListCandidatesResponse {
+  repeated PolicyCandidate candidates = 1;
+  agentfirewall.common.v1.PageResponse page = 2;
+}
+
+message GetCandidateRequest {
+  string candidate_id = 1;
+}
+
+message GetCandidateResponse {
+  PolicyCandidate candidate = 1;
+}
+
+message ApproveCandidateRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  string candidate_id = 2;
+  string approved_by = 3;
+  string comment = 4;
+  bool activate_as_draft = 5;
+}
+
+message ApproveCandidateResponse {
+  PolicyCandidate candidate = 1;
+  string resulting_policy_id = 2;
+}
+
+message RejectCandidateRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  string candidate_id = 2;
+  string rejected_by = 3;
+  string comment = 4;
+}
+
+message RejectCandidateResponse {
+  PolicyCandidate candidate = 1;
+}
+
+message SetModeRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  agentfirewall.common.v1.ResourceScope scope = 2;
+  LearnerMode mode = 3;
+  string comment = 4;
+}
+
+message SetModeResponse {
+  agentfirewall.common.v1.ResourceScope scope = 1;
+  LearnerMode mode = 2;
+  google.protobuf.Timestamp effective_at = 3;
+}
+
+message GetModeRequest {
+  agentfirewall.common.v1.ResourceScope scope = 1;
+}
+
+message GetModeResponse {
+  agentfirewall.common.v1.ResourceScope scope = 1;
+  LearnerMode mode = 2;
+  google.protobuf.Timestamp effective_at = 3;
+}
+
+message GenerateNowRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  agentfirewall.common.v1.ResourceScope scope = 2;
+  google.protobuf.Struct generation_hints = 3;
+}
+
+message GenerateNowResponse {
+  string job_id = 1;
+  google.protobuf.Timestamp queued_at = 2;
+}
+
+service LearnerService {
+  rpc SetMode(SetModeRequest) returns (SetModeResponse);
+  rpc GetMode(GetModeRequest) returns (GetModeResponse);
+  rpc GetBaseline(GetBaselineRequest) returns (GetBaselineResponse);
+  rpc ListCandidates(ListCandidatesRequest) returns (ListCandidatesResponse);
+  rpc GetCandidate(GetCandidateRequest) returns (GetCandidateResponse);
+  rpc ApproveCandidate(ApproveCandidateRequest) returns (ApproveCandidateResponse);
+  rpc RejectCandidate(RejectCandidateRequest) returns (RejectCandidateResponse);
+  rpc GenerateNow(GenerateNowRequest) returns (GenerateNowResponse);
+}

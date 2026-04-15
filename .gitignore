@@ -1,0 +1,47 @@
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+*.whl
+.venv/
+venv/
+
+# Node
+node_modules/
+*.tsbuildinfo
+bindings/node/*.node
+bindings/node/index.js
+bindings/node/index.d.ts
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Docker
+docker/.env
+
+# Build artifacts
+*.so
+*.dylib
+*.dll
+
+# Test artifacts
+*.profraw
+*.profdata
+lcov.info
+tarpaulin-report.html

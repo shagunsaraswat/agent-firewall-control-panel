@@ -1,0 +1,28 @@
+[package]
+name = "agentfirewall-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Core types, policy evaluator, run context, and reason codes for Agent FirewallKit"
+
+[features]
+default = []
+standalone = ["dep:rusqlite"]
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+rust_decimal = { workspace = true }
+tracing = { workspace = true }
+parking_lot = "0.12"
+rusqlite = { version = "0.32", features = ["bundled"], optional = true }
+toml = "0.8"
+
+[dev-dependencies]
+proptest = { workspace = true }
+tempfile = "3"
+tokio = { workspace = true, features = ["test-util"] }

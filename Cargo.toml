@@ -1,0 +1,86 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/agentfirewall-core",
+    "crates/agentfirewall-embed",
+    "crates/agentfirewall-sentinel",
+    "crates/agentfirewall-witness",
+    "crates/agentfirewall-learner",
+    "crates/agentfirewall-node",
+    "crates/agentfirewall-python",
+    "crates/agentfirewall-server",
+    "crates/agentfirewall-cli",
+    "tests/integration",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.77"
+license = "MIT"
+repository = "https://github.com/shagunsaraswat/agent-firewall-control-panel"
+
+[workspace.dependencies]
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# IDs and time
+uuid = { version = "1", features = ["v4", "v7", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# Error handling
+thiserror = "2"
+anyhow = "1"
+
+# Crypto
+sha2 = "0.10"
+
+# Numeric
+rust_decimal = { version = "1", features = ["serde-with-str"] }
+
+# Tracing / Observability
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# gRPC
+tonic = "0.12"
+tonic-build = "0.12"
+prost = "0.13"
+prost-types = "0.13"
+
+# HTTP
+axum = { version = "0.7", features = ["macros"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace", "request-id"] }
+
+# Database
+sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "uuid", "chrono", "json", "migrate"] }
+
+# Cache
+redis = { version = "0.27", features = ["tokio-comp", "connection-manager"] }
+
+# Message bus
+async-nats = "0.38"
+
+# Embeddings
+fastembed = "4"
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# Testing
+proptest = "1"
+
+# Internal crates
+agentfirewall-core = { path = "crates/agentfirewall-core" }
+agentfirewall-embed = { path = "crates/agentfirewall-embed" }
+agentfirewall-sentinel = { path = "crates/agentfirewall-sentinel" }
+agentfirewall-witness = { path = "crates/agentfirewall-witness" }
+agentfirewall-learner = { path = "crates/agentfirewall-learner" }
+agentfirewall-node = { path = "crates/agentfirewall-node" }
+agentfirewall-server = { path = "crates/agentfirewall-server" }
+agentfirewall-cli = { path = "crates/agentfirewall-cli" }

@@ -1,0 +1,12 @@
+target/
+.git/
+*.md
+docs/
+specs/
+final_prd/
+runbook-agent-kit-v6/
+bindings/
+.github/
+.cursor/
+*.env
+docker/

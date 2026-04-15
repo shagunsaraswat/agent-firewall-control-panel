@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package agentfirewall.common.v1;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_package = "com.agentfirewall.common.v1";
+option go_package = "github.com/shagunsaraswat/agent-firewall-control-panel/gen/go/common/v1;commonv1";
+
+// Uuid is a canonical RFC 4122 string (8-4-4-4-12 lowercase hex with hyphens).
+// Example: "550e8400-e29b-41d4-a716-446655440000"
+message Uuid {
+  string value = 1;
+}
+
+// Pagination request for list RPCs (cursor-based).
+message PageRequest {
+  // Opaque cursor from a prior List* response; empty for the first page.
+  string page_cursor = 1;
+
+  // Maximum items to return. Server clamps to a safe maximum (e.g. 200).
+  int32 page_size = 2;
+}
+
+// Pagination response metadata.
+message PageResponse {
+  // Pass as page_cursor on the next request; empty if no next page.
+  string next_page_cursor = 1;
+
+  // True if more results exist beyond this page.
+  bool has_more = 2;
+
+  // Optional rough total for UI; may be omitted (-1) if expensive to compute.
+  int64 total_estimate = 3;
+}
+
+// Standard error detail attached to failed RPCs (also mapped to REST JSON).
+message ErrorDetail {
+  // Stable application error code, e.g. "RUN_NOT_FOUND".
+  string code = 1;
+
+  // Human-readable description.
+  string message = 2;
+
+  // Arbitrary structured context (field violations, limits, etc.).
+  google.protobuf.Struct details = 3;
+
+  // Domain reason code when applicable, e.g. "BUDGET_EXCEEDED".
+  string reason_code = 4;
+
+  // Request identifier for support correlation (mirrors X-Request-Id).
+  string request_id = 5;
+}
+
+// Optional idempotency token for mutating requests (message field); mirrors HTTP Idempotency-Key.
+message IdempotencyParams {
+  // Client-supplied key; server deduplicates successful mutations for a TTL.
+  string idempotency_key = 1;
+}
+
+// Documents the HTTP/gRPC metadata idempotency header shape (x-idempotency-key / Idempotency-Key).
+message IdempotencyHeader {
+  string idempotency_key = 1;
+}
+
+// Scope for multi-tenant resources (policies, runs, etc.).
+enum ScopeType {
+  SCOPE_TYPE_UNSPECIFIED = 0;
+  SCOPE_TYPE_ORG = 1;
+  SCOPE_TYPE_WORKSPACE = 2;
+  SCOPE_TYPE_PROJECT = 3;
+  SCOPE_TYPE_AGENT = 4;
+}
+
+// Resource scope reference (scope_type + scope_id).
+message ResourceScope {
+  ScopeType scope_type = 1;
+  // UUID string of the org/workspace/project/agent.
+  string scope_id = 2;
+}
+
+// Generic label bag for operator metadata (map<string, string> via entries).
+message Labels {
+  map<string, string> entries = 1;
+}

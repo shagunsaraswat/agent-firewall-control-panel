@@ -1,0 +1,18 @@
+[package]
+name = "agentfirewall-embed"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Embedding engine for Agent FirewallKit Sentinel (FastEmbed-rs / ONNX Runtime)"
+
+[dependencies]
+agentfirewall-core = { workspace = true }
+fastembed = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true }
+parking_lot = "0.12"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }

@@ -1,0 +1,116 @@
+syntax = "proto3";
+
+package agentfirewall.approval.v1;
+
+import "agentfirewall/common/v1/common.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+option java_multiple_files = true;
+option java_package = "com.agentfirewall.approval.v1";
+option go_package = "github.com/shagunsaraswat/agent-firewall-control-panel/gen/go/approval/v1;approvalv1";
+
+enum ApprovalStatus {
+  APPROVAL_STATUS_UNSPECIFIED = 0;
+  APPROVAL_STATUS_PENDING = 1;
+  APPROVAL_STATUS_APPROVED = 2;
+  APPROVAL_STATUS_REJECTED = 3;
+  APPROVAL_STATUS_EXPIRED = 4;
+  APPROVAL_STATUS_CANCELLED = 5;
+}
+// Storage mapping note: APPROVAL_STATUS_REJECTED maps to SQL status `denied`.
+
+// Witness bundle hash or CAS reference supplied by the SDK.
+message WitnessBundle {
+  string content_hash = 1; // hex-encoded digest
+  string cas_uri = 2;    // optional storage URI
+}
+
+message Approval {
+  string approval_id = 1;
+  string run_id = 2;
+  int32 step_index = 3;
+  ApprovalStatus status = 4;
+  string policy_id = 5;
+  string rule_id = 6;
+  string reason_code = 7;
+  google.protobuf.Struct request_payload = 8;
+  WitnessBundle witness = 9;
+  string requested_by = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp resolved_at = 12;
+  string resolved_by = 13;
+  string resolution_comment = 14;
+  google.protobuf.Timestamp expires_at = 15;
+}
+
+message CreateApprovalRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  string run_id = 2;
+  int32 step_index = 3;
+  string policy_id = 4;
+  string rule_id = 5;
+  string reason_code = 6;
+  google.protobuf.Struct request_payload = 7;
+  WitnessBundle witness = 8;
+  string requested_by = 9;
+  // RFC 3339 duration in string form, e.g. "30m", "2h"; server normalizes.
+  string ttl = 10;
+}
+
+message CreateApprovalResponse {
+  Approval approval = 1;
+}
+
+message GetApprovalRequest {
+  string approval_id = 1;
+}
+
+message GetApprovalResponse {
+  Approval approval = 1;
+}
+
+message ListApprovalsRequest {
+  agentfirewall.common.v1.PageRequest page = 1;
+  string run_id = 2;
+  ApprovalStatus status_filter = 3;
+}
+
+message ListApprovalsResponse {
+  repeated Approval approvals = 1;
+  agentfirewall.common.v1.PageResponse page = 2;
+}
+
+message ResolveApprovalRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  string approval_id = 2;
+  ApprovalStatus resolution = 3; // APPROVED or REJECTED only
+  string resolved_by = 4;
+  string resolution_comment = 5;
+}
+
+message ResolveApprovalResponse {
+  Approval approval = 1;
+}
+
+// Re-run witness checks after state drift or delayed execution.
+message RevalidateApprovalRequest {
+  agentfirewall.common.v1.IdempotencyParams idempotency = 1;
+  string approval_id = 2;
+  WitnessBundle witness = 3;
+  google.protobuf.Struct revalidation_context = 4;
+}
+
+message RevalidateApprovalResponse {
+  Approval approval = 1;
+  bool witness_valid = 2;
+  string reason_code = 3;
+}
+
+service ApprovalService {
+  rpc CreateApproval(CreateApprovalRequest) returns (CreateApprovalResponse);
+  rpc GetApproval(GetApprovalRequest) returns (GetApprovalResponse);
+  rpc ListApprovals(ListApprovalsRequest) returns (ListApprovalsResponse);
+  rpc ResolveApproval(ResolveApprovalRequest) returns (ResolveApprovalResponse);
+  rpc RevalidateApproval(RevalidateApprovalRequest) returns (RevalidateApprovalResponse);
+}

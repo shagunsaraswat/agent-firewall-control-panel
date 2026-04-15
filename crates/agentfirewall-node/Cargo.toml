@@ -1,0 +1,28 @@
+[package]
+name = "agentfirewall-node"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "TypeScript/Node.js bindings for Agent FirewallKit SDK"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+agentfirewall-core = { workspace = true }
+agentfirewall-sentinel = { workspace = true }
+agentfirewall-witness = { workspace = true }
+agentfirewall-learner = { workspace = true }
+agentfirewall-embed = { workspace = true }
+napi = { version = "2", features = ["async", "napi8", "serde-json"] }
+napi-derive = "2"
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+tokio = { workspace = true }
+rust_decimal = { workspace = true }
+
+[build-dependencies]
+napi-build = "2"
